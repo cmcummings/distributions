@@ -1,7 +1,5 @@
 import { Accessor, Component, createEffect, mergeProps } from "solid-js";
 
-type Function2D = (x: number) => number;
-
 enum FunctionType { Discrete, Continuous }
 
 /**
@@ -26,16 +24,18 @@ function drawGridLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2:
  */
 function drawFunction(
   ctx: CanvasRenderingContext2D,
-  f: Function2D, // The function to be drawn, which takes a single variable, x
+  f: (x: number) => number, // The function to be drawn, which takes a single variable, x
   funcType: FunctionType, // The type of function, which affects how it is drawn
   options: {
     step: number, // The intervals at which the function will be calculated
     domain: [number, number] // The domain the function will be drawn at, inclusive
     range: [number, number] // The range the function will be drawn at, inclusive
+    probBounds: [number, number] // The domain where the probabilty is being calculated (area under the curve)
   }
 ) {
   const canvasWidth = ctx.canvas.width;
   const canvasHeight = ctx.canvas.height;
+  const [probBegin, probEnd] = options.probBounds;
   const [xBegin, xEnd] = options.domain;
   const [yBegin, yEnd] = options.range;
   const xSpread = xEnd - xBegin;
@@ -69,24 +69,45 @@ function drawFunction(
       break;
     case FunctionType.Continuous:
       ctx.strokeStyle = "#14b8a6"
-      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fillStyle = ctx.strokeStyle + "44";
       ctx.lineWidth = 2;
-      ctx.beginPath();
+     
+      const curvePath = new Path2D();
+      const fillPath = new Path2D();
+      let begunFill = false;
+      let doneFill = false;
+      
+      const cy0 = canvasHeight - (-yBegin / ySpread * canvasHeight);
       for (let x = xBegin; x <= xEnd; x += options.step) {
         const y = f(x);
         const cx = (x - xBegin) / xSpread * canvasWidth;
-        const cHeight = (y - yBegin) / ySpread * canvasHeight;
-        const cy = canvasHeight - cHeight;
-        if (x == xBegin) {
-          ctx.moveTo(cx, canvasHeight); // To prevent weird fills when the domain doesn't include the entire distribution
-          ctx.lineTo(cx, cy);
-        } else {
-          ctx.lineTo(cx, cy);
+        const cy = canvasHeight - (y - yBegin) / ySpread * canvasHeight;
+        
+        // Draw curve  
+        curvePath.lineTo(cx, cy);
+        
+        // Draw filled probability
+        if (!doneFill) { 
+          if (begunFill && x >= probEnd) {
+            fillPath.lineTo(cx, cy); 
+            fillPath.lineTo(cx, cy0);
+            fillPath.closePath();
+            doneFill = true;
+          } else if (!begunFill && x >= probBegin) {
+            fillPath.moveTo(cx, cy0);
+            fillPath.lineTo(cx, cy);
+            begunFill = true;
+          } else if(!begunFill) {
+            fillPath.moveTo(cx, cy);
+          } else {
+            fillPath.lineTo(cx, cy);
+          }
         }
       }
-      ctx.stroke();
-      ctx.closePath(); // Go to first point to create fill shape
-      ctx.fill();
+    
+      ctx.fill(fillPath);
+      ctx.stroke(curvePath);
+   
       break;
   }
 }
@@ -96,7 +117,8 @@ const Graph: Component<{
   height: number, // The height of the canvas
   domain: [number, number],
   range: [number, number],
-  func: Function2D
+  probBounds: [number, number],
+  func: (x: number) => number 
 }> = (p) => {
   const props = mergeProps(p);
   
@@ -119,8 +141,9 @@ const Graph: Component<{
     // Draw function
     drawFunction(ctx, props.func, FunctionType.Continuous, {
       step: 0.05,
-      domain: [props.domain[0], props.domain[1]],
-      range: [props.range[0], props.range[1]],
+      domain: props.domain,
+      range: props.range,
+      probBounds: props.probBounds
     });
   });
 
