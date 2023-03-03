@@ -14,51 +14,66 @@ function combination(n: number, k: number): number {
 }
 
 const N = 1000;
-export function estimateIntegral(f: (x: number) => number, a: number, b: number): number {
+export function estimateIntegral(pdf: PDF, a: number, b: number): number {
   let sum = 0;
 
   for (let n = 1; n <= N; n += 1) {
     const x = a + (2 * n - 1) / (2 * N) * (b - a);
-    sum += f(x)
+    sum += pdf(x)
   }
 
-  return (b - a)/N * sum;
+  return (b - a) / N * sum;
+}
+
+export function discreteCDF(pdf: PDF): CDF {
+  return (a: number, b: number) => {
+    a = Math.round(a);
+    b = Math.floor(b);
+    let res = 0;
+    for (let x = a; x <= b; x++) {
+      res += pdf(x);
+    }
+    return res;
+  }
 }
 
 type PDF = (x: number) => number;
 type CDF = (a: number, b: number) => number;
 
-export function binomial(n: number, p: number): PDF {
+export function binomialpdf(n: number, p: number): PDF {
   return (x: number) => {
-    return combination(n, x) * Math.pow(p, x) * Math.pow(1 - p, n - x); 
-  } 
+    if (x < 0) return 0;
+    return combination(n, x) * Math.pow(p, x) * Math.pow(1 - p, n - x);
+  }
+}
+
+export function binomialcdf(n: number, p: number): CDF {
+  return discreteCDF(binomialpdf(n, p));
 }
 
 const sqrt2pi = Math.sqrt(2 * Math.PI);
 export function normalpdf(m: number, s: number): PDF {
   return (x: number) => {
-    return (1/(s*sqrt2pi)) * Math.pow(Math.E, (-1/2)*Math.pow((x-m)/s, 2));
+    return (1 / (s * sqrt2pi)) * Math.pow(Math.E, (-1 / 2) * Math.pow((x - m) / s, 2));
   }
 }
 
 export function normalcdf(m: number, s: number): CDF {
   return (a: number, b: number) => {
-    return estimateIntegral(normalpdf(m, s), a, b); 
-  } 
+    return estimateIntegral(normalpdf(m, s), a, b);
+  }
 }
 
 
 export function poissonpdf(l: number): PDF {
   return (x: number) => {
-    if (x < 0) return 0; 
+    if (x < 0) return 0;
     return Math.pow(Math.E, -l) * Math.pow(l, x) / factorial(x);
   }
 }
 
 export function poissoncdf(l: number): CDF {
-  return (a: number, b: number) => {
-    return estimateIntegral(poissonpdf(l), a, b);
-  }
+  return discreteCDF(poissonpdf(l))
 }
 
 
@@ -90,8 +105,9 @@ export function uniformpdf(a: number, b: number): PDF {
 
 export function uniformcdf(a: number, b: number): CDF {
   return (c: number, d: number) => {
-    c = Math.max(c, a)
-    d = Math.min(d, b)
-    return (d - c) / (b - a)
+    if ((c <= a && d <= a) || (c >= b && d >= b)) return 0;
+    c = Math.max(c, a);
+    d = Math.min(d, b);
+    return (d - c) / (b - a);
   }
 }

@@ -7,7 +7,8 @@ const DividerH: Component = () => {
 }
 
 const DividerV: Component = () => {
-  return <div class="border-l border-gray-200 h-full mx-4" />;
+  return <div class="inline border-1 border-l border-gray-300" />
+;
 }
 
 export { DividerH, DividerV };

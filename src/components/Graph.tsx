@@ -1,6 +1,6 @@
 import { Accessor, Component, createEffect, mergeProps } from "solid-js";
 
-enum FunctionType { Discrete, Continuous }
+export enum FunctionType { Discrete, Continuous }
 
 /**
  * Draws a light grey line from (x1, y1) to (x2, y2) 
@@ -14,6 +14,10 @@ function drawGridLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2:
   ctx.stroke();
   ctx.closePath();
 }
+
+const STROKE = "#14b8a6";
+const FILL = "#14b8a6";
+const FILL_TRANSPARENT = "#14b8a644";
 
 /**
  * Draws a grid and the function f to the canvas. 
@@ -53,23 +57,31 @@ function drawFunction(
   if (yBegin <= 0 && yEnd >= 0) {
     const cy = canvasHeight - (-yBegin / ySpread * canvasHeight);
     drawGridLine(ctx, 0, cy, canvasWidth, cy);
-  }
-
+  } 
+ 
   // Draw function
   switch (funcType) {
     case FunctionType.Discrete:      
-      ctx.fillStyle = "black";
-      for (let x = xBegin; x <= xEnd; x += options.step) {
+      const cWidth = canvasWidth / (xEnd - xBegin);
+
+      for (let x = xBegin; x <= xEnd; x += 1) {
         const y = f(x);
         const cx = (x - xBegin) / xSpread * canvasWidth;
         const cHeight = (y - yBegin) / ySpread * canvasHeight;
         const cy = canvasHeight - cHeight;
-        ctx.fillRect(cx - 2, cy, 4, cHeight);
+
+        if (x >= probBegin && x <= probEnd) {
+          ctx.fillStyle = FILL;
+        } else {
+          ctx.fillStyle = FILL_TRANSPARENT;
+        }
+
+        ctx.fillRect(cx - cWidth/2, cy, cWidth, cHeight);
       }
       break;
     case FunctionType.Continuous:
-      ctx.strokeStyle = "#14b8a6"
-      ctx.fillStyle = ctx.strokeStyle + "44";
+      ctx.strokeStyle = STROKE;
+      ctx.fillStyle = FILL_TRANSPARENT;
       ctx.lineWidth = 2;
      
       const curvePath = new Path2D();
@@ -118,7 +130,8 @@ const Graph: Component<{
   domain: [number, number],
   range: [number, number],
   probBounds: [number, number],
-  func: (x: number) => number 
+  func: (x: number) => number,
+  funcType: FunctionType
 }> = (p) => {
   const props = mergeProps(p);
   
@@ -139,7 +152,7 @@ const Graph: Component<{
     // ctx.fillRect(0, 0, props.width, props.height);
 
     // Draw function
-    drawFunction(ctx, props.func, FunctionType.Continuous, {
+    drawFunction(ctx, props.func, props.funcType, {
       step: 0.05,
       domain: props.domain,
       range: props.range,

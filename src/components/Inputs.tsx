@@ -121,12 +121,14 @@ const RangeDetailed: Component<RangeProps & { name: string }> = (p) => {
   const props = mergeProps(sliderDefaultProps, p);
 
   return (
-    <div class="p-2 flex items-center justify-between">
+    <div class="p-2 sm:flex items-center justify-between">
       <div class="align-start">
         <p class="inline mr-2">{props.name}</p>
       </div>
-      <div class="align-end flex items-center gap-2">
+      <div class="align-end">
         <RangeSlider {...props} />
+      </div>
+      <div class="align-end flex items-center gap-2">
         <NumberInput
           value={props.left}
           step={props.step}
@@ -205,7 +207,7 @@ const NumberSlider: Component<SliderProps> = (p) => {
   });
 
   return (
-    <div class="inline-block w-48 h-4 relative" ref={slider}>
+    <div class="inline-block w-40 h-4 relative" ref={slider}>
       <div
         ref={slider}
         class="bg-gray-300 rounded-full h-2 top-1 left-2 absolute"
@@ -229,11 +231,11 @@ const NumberDetailed: Component<SliderProps & { name: string }> = (p) => {
   const props = mergeProps(p);
 
   return (
-    <div class="p-2 flex items-center justify-between">
+    <div class="p-2 sm:flex flex-row flex-wrap items-center justify-between">
       <div class="align-start">
         <p class="inline mr-2">{props.name}</p>
       </div>
-      <div class="align-end flex items-center gap-2">
+      <div class="align-end">
         <NumberSlider {...props} />
         <NumberInput
           value={props.value}

@@ -1,13 +1,20 @@
-import { Component, createEffect, createSignal, For, JSX, Match, mergeProps, onCleanup, onMount, splitProps, Switch } from 'solid-js';
-import { DividerH } from './components/Generic';
-import Graph from "./components/Graph";
+import { Component, createEffect, createSignal, For, JSX, Match, mergeProps, onCleanup, onMount, Show, splitProps, Switch } from 'solid-js';
+import { DividerH, DividerV } from './components/Generic';
+import Graph, { FunctionType } from "./components/Graph";
 import { RangeDetailed, NumberDetailed, ProbabilityInput } from "./components/Inputs";
-import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf } from './distribution';
+import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf, binomialpdf, binomialcdf } from './distribution';
+
+const Container: Component<JSX.HTMLAttributes<HTMLDivElement>> = (p) => {
+  const [local, rest] = splitProps(p, ["class"]);
+
+  return <div class={"p-5 bg-gray-100 border border-gray-200 rounded-md " + local.class} {...rest} />
+}
 
 const DistributionPage: Component<{
   pdf: (x: number) => number,
   cdf: (a: number, b: number) => number,
-  distributionSettingsChildren: JSX.Element
+  distributionSettingsChildren: JSX.Element,
+  distType: FunctionType
 }> = (p) => {
   const props = mergeProps(p);
 
@@ -25,15 +32,16 @@ const DistributionPage: Component<{
   })
 
   return (
-    <main class="px-2 lg:px-[10%] mt-5 flex flex-wrap gap-5 justify-center items-start">
-      <div class="p-5 bg-gray-100 border border-gray-200 rounded-md">
+    <main class="px-2 lg:px-[10%] mt-5 flex flex-wrap gap-5 items-start justify-center">
+      <Container>
         <Graph width={500} height={300}
           domain={[domainMin(), domainMax()]}
           range={[rangeMin(), rangeMax()]}
           probBounds={[probLeftBound(), probRightBound()]}
-          func={props.pdf} />
-      </div>
-      <div class="p-5 bg-gray-100 border border-gray-200 rounded-md">
+          func={props.pdf}
+          funcType={props.distType} />
+      </Container>
+      <Container>
         <h3 class="text-lg block font-medium">Graph Settings</h3>
         <RangeDetailed
           name="Domain"
@@ -56,7 +64,16 @@ const DistributionPage: Component<{
           leftBound={probLeftBound()} setLeftBound={setProbLeftBound}
           rightBound={probRightBound()} setRightBound={setProbRightBound}
           result={probResult()} />
-      </div>
+      </Container>
+      <Container class="flex-shrink">
+        <h3 class="text-lg font-medium">How to use</h3>
+        <ul>
+          <li>- Select a distribution to model from the top-bar.</li>
+          <li>- Adjust the distribution and graph settings accordingly.</li>
+          <li>- Collect your results!</li>
+          <li>Note: The settings can be set outside of the range of the sliders by using the number inputs directly.</li>
+        </ul>
+      </Container>
     </main>
   );
 }
@@ -73,43 +90,31 @@ const NormalDistributionPage: Component = () => {
   return <DistributionPage
     pdf={normalpdf(mean(), sd())}
     cdf={normalcdf(mean(), sd())}
+    distType={FunctionType.Continuous}
     distributionSettingsChildren={<>
       <NumberDetailed
-        name="Mean"
+        name="Mean (μ)"
         value={mean()} setValue={setMean}
         min={-50} max={50} step={0.1} />
       <NumberDetailed
-        name="Standard Deviation"
+        name="Standard Deviation (ρ)"
         value={sd()} setValue={setSD}
         min={0} max={10} step={0.1} />
     </>} />
 }
 
-const PoissonDistributionPage: Component = () => {
-  const [lambda, setLambda] = createSignal(0);
-
-  return <DistributionPage
-    pdf={poissonpdf(lambda())}
-    cdf={poissoncdf(lambda())}
-    distributionSettingsChildren={<>
-      <NumberDetailed
-        name="Lambda"
-        value={lambda()} setValue={setLambda}
-        min={0} max={10} step={0.1} /> 
-    </>} />
-}
-
 const ExponentialDistributionPage: Component = () => {
   const [lambda, setLambda] = createSignal(1);
-  
+
   return <DistributionPage
     pdf={exponentialpdf(lambda())}
     cdf={exponentialcdf(lambda())}
+    distType={FunctionType.Continuous}
     distributionSettingsChildren={<>
       <NumberDetailed
-        name="Lambda"
+        name="Lambda (λ)"
         value={lambda()} setValue={setLambda}
-        min={0} max={10} step={0.1} /> 
+        min={0} max={10} step={0.1} />
     </>} />
 }
 
@@ -128,6 +133,7 @@ const UniformDistributionPage: Component = () => {
   return <DistributionPage
     pdf={uniformpdf(a(), b())}
     cdf={uniformcdf(a(), b())}
+    distType={FunctionType.Continuous}
     distributionSettingsChildren={<>
       <RangeDetailed
         name="Range"
@@ -137,46 +143,97 @@ const UniformDistributionPage: Component = () => {
     </>} />
 }
 
-const distributions: {
-  name: string,
-  component: Component 
-}[] = [
+const BinomialDistributionPage: Component = () => {
+  const [n, setN] = createSignal(1);
+  const [p, setP] = createSignal(0.5);
+
+  return <DistributionPage
+    pdf={binomialpdf(n(), p())}
+    cdf={binomialcdf(n(), p())}
+    distType={FunctionType.Discrete}
+    distributionSettingsChildren={<>
+      <NumberDetailed
+        name="Number of trials (n)"
+        value={n()} setValue={setN}
+        min={1} max={20} step={1} />
+      <NumberDetailed
+        name="Probability of success (p)"
+        value={p()} setValue={setP}
+        min={0} max={1} step={0.01} /> 
+    </>} />
+}
+
+const PoissonDistributionPage: Component = () => {
+  const [lambda, setLambda] = createSignal(1.7);
+
+  return <DistributionPage
+    pdf={poissonpdf(lambda())}
+    cdf={poissoncdf(lambda())}
+    distType={FunctionType.Discrete}
+    distributionSettingsChildren={<>
+      <NumberDetailed
+        name="Lambda (λ)"
+        value={lambda()} setValue={setLambda}
+        min={0} max={10} step={0.1} />
+    </>} />
+}
+
+const distributions: { name: string, component: Component }[] = [
   {
     name: "Normal",
-    component: NormalDistributionPage 
+    component: NormalDistributionPage
   },
-  { 
+  {
     name: "Exponential",
-    component: ExponentialDistributionPage 
+    component: ExponentialDistributionPage
   },
   {
     name: "Uniform",
-    component: UniformDistributionPage 
-  } 
+    component: UniformDistributionPage
+  },
+  {
+    name: "Binomial",
+    component: BinomialDistributionPage
+  },
+  {
+    name: "Poisson",
+    component: PoissonDistributionPage
+  }
 ]
+
+const DividerR: Component = () => {
+  return <div class="border-1 border-gray-300 border-t sm:border-l" />
+}
 
 const App: Component = () => {
   const [distribution, setDistribution] = createSignal(0);
+  const [menuOpen, setMenuOpen] = createSignal(true);
 
   return (
     <>
-      <div class="bg-gray-100 border border-gray-200 py-2 px-2 lg:px-[20%] flex gap-3 align-center">
-        <a href="https://github.com/cmcummings/distributions"><img src="/src/assets/github-mark.svg" class="w-5 h-5"/></a>
-        <h2 class="inline">Distributions</h2>
-        <div class="inline border-1 border-l border-gray-300" />
-        <For each={Object.values(distributions)}>{(d, i) =>
-          <HeaderAnchor onClick={() => setDistribution(i())} class={distribution() === i() ? "font-bold" : ""}>{d.name}</HeaderAnchor>
-        }</For>
+      <div class="bg-gray-100 border border-gray-200 px-2 py-2 xl:px-[10%] 2xl:px-[15%] flex flex-col sticky z-10 top-0 sm:flex-row sm:justify-between gap-3 align-center">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex justify-between">
+            <h2 class="inline">Distributions</h2>
+            <div class="sm:hidden">
+              <button onClick={() => setMenuOpen(!menuOpen())}><img src="/src/assets/hamburger.svg" class="w-6 h-6" /></button>
+            </div>
+          </div>
+          <div class={"flex-col sm:flex-row gap-3 " + (menuOpen() ? "flex" : "hidden sm:flex")}>
+            <DividerR />
+            <For each={Object.values(distributions)}>{(d, i) =>
+              <HeaderAnchor onClick={() => setDistribution(i())} class={distribution() === i() ? "font-bold" : ""}>{d.name}</HeaderAnchor>
+            }</For>
+          </div>
+        </div>
+        <div class={"flex-col sm:flex-row gap-3 " + (menuOpen() ? "flex" : "hidden sm:flex")}>
+          <div class="sm:invisible">
+            <DividerR />
+          </div>
+          <a href="https://github.com/cmcummings/distributions" class="flex items-center gap-2">Source<img src="/src/assets/github-mark.svg" class="w-5 h-5 inline" /></a>
+        </div>
       </div>
       {distributions[distribution()].component}
-      {/* <Switch>
-        <Match when={distribution() === "normal"}>
-          <NormalDistributionPage />
-        </Match>
-        <Match when={distribution() === "exponential"}>
-          <ExponentialDistributionPage />
-        </Match>
-      </Switch> */}
     </>
   );
 };
