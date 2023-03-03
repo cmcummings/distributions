@@ -207,7 +207,7 @@ const DividerR: Component = () => {
 
 const App: Component = () => {
   const [distribution, setDistribution] = createSignal(0);
-  const [menuOpen, setMenuOpen] = createSignal(true);
+  const [menuOpen, setMenuOpen] = createSignal(false);
 
   return (
     <>
