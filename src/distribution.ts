@@ -79,3 +79,19 @@ export function exponentialcdf(l: number): CDF {
     return exponentialcdf_lex(l, b) - exponentialcdf_lex(l, a);
   }
 }
+
+
+export function uniformpdf(a: number, b: number): PDF {
+  return (x) => {
+    if (x > b || x < a) return 0;
+    return 1 / (b - a)
+  }
+}
+
+export function uniformcdf(a: number, b: number): CDF {
+  return (c: number, d: number) => {
+    c = Math.max(c, a)
+    d = Math.min(d, b)
+    return (d - c) / (b - a)
+  }
+}

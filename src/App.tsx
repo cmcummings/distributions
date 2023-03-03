@@ -1,8 +1,8 @@
-import { Component, createEffect, createSignal, For, JSX, Match, mergeProps, splitProps, Switch } from 'solid-js';
+import { Component, createEffect, createSignal, For, JSX, Match, mergeProps, onCleanup, onMount, splitProps, Switch } from 'solid-js';
 import { DividerH } from './components/Generic';
 import Graph from "./components/Graph";
 import { RangeDetailed, NumberDetailed, ProbabilityInput } from "./components/Inputs";
-import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf } from './distribution';
+import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf } from './distribution';
 
 const DistributionPage: Component<{
   pdf: (x: number) => number,
@@ -14,7 +14,7 @@ const DistributionPage: Component<{
   const [domainMin, setDomainMin] = createSignal(-5);
   const [domainMax, setDomainMax] = createSignal(5);
   const [rangeMin, setRangeMin] = createSignal(0);
-  const [rangeMax, setRangeMax] = createSignal(0.5);
+  const [rangeMax, setRangeMax] = createSignal(1);
 
   const [probLeftBound, setProbLeftBound] = createSignal(-1.96);
   const [probRightBound, setProbRightBound] = createSignal(1.96);
@@ -101,7 +101,7 @@ const PoissonDistributionPage: Component = () => {
 
 const ExponentialDistributionPage: Component = () => {
   const [lambda, setLambda] = createSignal(1);
-
+  
   return <DistributionPage
     pdf={exponentialpdf(lambda())}
     cdf={exponentialcdf(lambda())}
@@ -113,8 +113,50 @@ const ExponentialDistributionPage: Component = () => {
     </>} />
 }
 
+const UniformDistributionPage: Component = () => {
+  const [a, setA] = createSignal(-1);
+  const [b, setB] = createSignal(1);
+
+  onMount(() => {
+    console.log("mounted")
+  });
+
+  onCleanup(() => {
+    console.log("unmounted")
+  });
+
+  return <DistributionPage
+    pdf={uniformpdf(a(), b())}
+    cdf={uniformcdf(a(), b())}
+    distributionSettingsChildren={<>
+      <RangeDetailed
+        name="Range"
+        left={a()} setLeft={setA}
+        right={b()} setRight={setB}
+        min={-10} max={10} step={0.1} />
+    </>} />
+}
+
+const distributions: {
+  name: string,
+  component: Component 
+}[] = [
+  {
+    name: "Normal",
+    component: NormalDistributionPage 
+  },
+  { 
+    name: "Exponential",
+    component: ExponentialDistributionPage 
+  },
+  {
+    name: "Uniform",
+    component: UniformDistributionPage 
+  } 
+]
+
 const App: Component = () => {
-  const [distribution, setDistribution] = createSignal<string>("normal");
+  const [distribution, setDistribution] = createSignal(0);
 
   return (
     <>
@@ -122,18 +164,19 @@ const App: Component = () => {
         <a href="https://github.com/cmcummings/distributions"><img src="/src/assets/github-mark.svg" class="w-5 h-5"/></a>
         <h2 class="inline">Distributions</h2>
         <div class="inline border-1 border-l border-gray-300" />
-        <For each={["normal", "exponential"]}>{(d, i) =>
-          <HeaderAnchor onClick={() => setDistribution(d)}>{d}</HeaderAnchor>
+        <For each={Object.values(distributions)}>{(d, i) =>
+          <HeaderAnchor onClick={() => setDistribution(i())} class={distribution() === i() ? "font-bold" : ""}>{d.name}</HeaderAnchor>
         }</For>
       </div>
-      <Switch>
+      {distributions[distribution()].component}
+      {/* <Switch>
         <Match when={distribution() === "normal"}>
           <NormalDistributionPage />
         </Match>
         <Match when={distribution() === "exponential"}>
           <ExponentialDistributionPage />
         </Match>
-      </Switch>
+      </Switch> */}
     </>
   );
 };
