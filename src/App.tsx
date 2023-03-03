@@ -25,7 +25,7 @@ const DistributionPage: Component<{
   })
 
   return (
-    <main class="px-2 lg:px-[10%] mt-5 flex flex-wrap gap-5 justify-center">
+    <main class="px-2 lg:px-[10%] mt-5 flex flex-wrap gap-5 justify-center items-start">
       <div class="p-5 bg-gray-100 border border-gray-200 rounded-md">
         <Graph width={500} height={300}
           domain={[domainMin(), domainMax()]}
@@ -34,7 +34,7 @@ const DistributionPage: Component<{
           func={props.pdf} />
       </div>
       <div class="p-5 bg-gray-100 border border-gray-200 rounded-md">
-        <h3 class="text-lg block">Graph Settings</h3>
+        <h3 class="text-lg block font-medium">Graph Settings</h3>
         <RangeDetailed
           name="Domain"
           left={domainMin()} setLeft={setDomainMin}
@@ -48,10 +48,10 @@ const DistributionPage: Component<{
           min={0} max={1} step={0.01}
         />
         <DividerH />
-        <h3 class="text-lg block">Distribution</h3>
+        <h3 class="text-lg block font-medium">Distribution</h3>
         {props.distributionSettingsChildren}
         <DividerH />
-        <h3 class="text-lg block mb-2">Probability</h3>
+        <h3 class="text-lg block font-medium mb-2">Probability</h3>
         <ProbabilityInput
           leftBound={probLeftBound()} setLeftBound={setProbLeftBound}
           rightBound={probRightBound()} setRightBound={setProbRightBound}
