@@ -1,71 +1,139 @@
-import { Component, createEffect, createSignal } from 'solid-js';
-import { Divider } from './components/Generic';
+import { Component, createEffect, createSignal, For, JSX, Match, mergeProps, splitProps, Switch } from 'solid-js';
+import { DividerH } from './components/Generic';
 import Graph from "./components/Graph";
 import { RangeDetailed, NumberDetailed, ProbabilityInput } from "./components/Inputs";
-import { normalcdf, normal } from './distribution';
+import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf } from './distribution';
 
+const DistributionPage: Component<{
+  pdf: (x: number) => number,
+  cdf: (a: number, b: number) => number,
+  distributionSettingsChildren: JSX.Element
+}> = (p) => {
+  const props = mergeProps(p);
 
-const App: Component = () => {
   const [domainMin, setDomainMin] = createSignal(-5);
   const [domainMax, setDomainMax] = createSignal(5);
   const [rangeMin, setRangeMin] = createSignal(0);
   const [rangeMax, setRangeMax] = createSignal(0.5);
-  const [mean, setMean] = createSignal(0);
-  const [sd, setSD] = createSignal(1);
 
   const [probLeftBound, setProbLeftBound] = createSignal(-1.96);
   const [probRightBound, setProbRightBound] = createSignal(1.96);
   const [probResult, setProbResult] = createSignal(0);
 
   createEffect(() => {
-    setProbResult(normalcdf(mean(), sd(), probLeftBound(), probRightBound()))
+    setProbResult(props.cdf(probLeftBound(), probRightBound()))
   })
 
   return (
-    <>
-      <div class="bg-gray-100 border border-gray-200 py-2 px-2 lg:px-[20%]">
-        <h2>Distributions</h2>
+    <main class="px-2 lg:px-[10%] mt-5 flex flex-wrap gap-5 justify-center">
+      <div class="p-5 bg-gray-100 border border-gray-200 rounded-md">
+        <Graph width={500} height={300}
+          domain={[domainMin(), domainMax()]}
+          range={[rangeMin(), rangeMax()]}
+          probBounds={[probLeftBound(), probRightBound()]}
+          func={props.pdf} />
       </div>
-      <main class="px-2 lg:px-[10%] mt-5 flex flex-wrap gap-5 justify-center">
-        <div class="p-5 bg-gray-100 border border-gray-200 rounded-md">
-          <Graph width={500} height={300}
-            domain={[domainMin(), domainMax()]}
-            range={[rangeMin(), rangeMax()]}
-            probBounds={[probLeftBound(), probRightBound()]}
-            func={normal(mean(), sd())} />
-        </div>
-        <div class="p-5 bg-gray-100 border border-gray-200 rounded-md">
-          <h3 class="text-lg block">Graph Settings</h3>
-          <RangeDetailed
-            name="Domain"
-            left={domainMin()} setLeft={setDomainMin}
-            right={domainMax()} setRight={setDomainMax}
-            min={-100} max={100} step={1}
-          />
-          <RangeDetailed
-            name="Range"
-            left={rangeMin()} setLeft={setRangeMin}
-            right={rangeMax()} setRight={setRangeMax}
-            min={0} max={1} step={0.01}
-          />
-          <Divider /> 
-          <h3 class="text-lg block">Distribution</h3>
-          <NumberDetailed
-            name="Mean"
-            value={mean()} setValue={setMean}
-            min={-50} max={50} step={0.1}/>
-          <NumberDetailed
-            name="Standard Deviation"
-            value={sd()} setValue={setSD}
-            min={0} max={10} step={0.1}/>
-          <Divider />
-          <h3 class="text-lg block">Probability</h3>
-          <ProbabilityInput 
-            leftBound={probLeftBound()} setLeftBound={setProbLeftBound}
-            rightBound={probRightBound()} setRightBound={setProbRightBound} 
-            result={probResult()} />  
-        </div>
-      </main>
+      <div class="p-5 bg-gray-100 border border-gray-200 rounded-md">
+        <h3 class="text-lg block">Graph Settings</h3>
+        <RangeDetailed
+          name="Domain"
+          left={domainMin()} setLeft={setDomainMin}
+          right={domainMax()} setRight={setDomainMax}
+          min={-100} max={100} step={1}
+        />
+        <RangeDetailed
+          name="Range"
+          left={rangeMin()} setLeft={setRangeMin}
+          right={rangeMax()} setRight={setRangeMax}
+          min={0} max={1} step={0.01}
+        />
+        <DividerH />
+        <h3 class="text-lg block">Distribution</h3>
+        {props.distributionSettingsChildren}
+        <DividerH />
+        <h3 class="text-lg block mb-2">Probability</h3>
+        <ProbabilityInput
+          leftBound={probLeftBound()} setLeftBound={setProbLeftBound}
+          rightBound={probRightBound()} setRightBound={setProbRightBound}
+          result={probResult()} />
+      </div>
+    </main>
+  );
+}
+
+const HeaderAnchor: Component<JSX.HTMLAttributes<HTMLAnchorElement>> = (p) => {
+  const [local, rest] = splitProps(p, ["class"]);
+  return <a class={"inline hover:underline hover:cursor-pointer text-teal-800 " + local.class} {...rest}></a>;
+}
+
+const NormalDistributionPage: Component = () => {
+  const [mean, setMean] = createSignal(0);
+  const [sd, setSD] = createSignal(1);
+
+  return <DistributionPage
+    pdf={normalpdf(mean(), sd())}
+    cdf={normalcdf(mean(), sd())}
+    distributionSettingsChildren={<>
+      <NumberDetailed
+        name="Mean"
+        value={mean()} setValue={setMean}
+        min={-50} max={50} step={0.1} />
+      <NumberDetailed
+        name="Standard Deviation"
+        value={sd()} setValue={setSD}
+        min={0} max={10} step={0.1} />
+    </>} />
+}
+
+const PoissonDistributionPage: Component = () => {
+  const [lambda, setLambda] = createSignal(0);
+
+  return <DistributionPage
+    pdf={poissonpdf(lambda())}
+    cdf={poissoncdf(lambda())}
+    distributionSettingsChildren={<>
+      <NumberDetailed
+        name="Lambda"
+        value={lambda()} setValue={setLambda}
+        min={0} max={10} step={0.1} /> 
+    </>} />
+}
+
+const ExponentialDistributionPage: Component = () => {
+  const [lambda, setLambda] = createSignal(1);
+
+  return <DistributionPage
+    pdf={exponentialpdf(lambda())}
+    cdf={exponentialcdf(lambda())}
+    distributionSettingsChildren={<>
+      <NumberDetailed
+        name="Lambda"
+        value={lambda()} setValue={setLambda}
+        min={0} max={10} step={0.1} /> 
+    </>} />
+}
+
+const App: Component = () => {
+  const [distribution, setDistribution] = createSignal<string>("normal");
+
+  return (
+    <>
+      <div class="bg-gray-100 border border-gray-200 py-2 px-2 lg:px-[20%] flex gap-3 align-center">
+        <a href="https://github.com/cmcummings/distributions"><img src="/src/assets/github-mark.svg" class="w-5 h-5"/></a>
+        <h2 class="inline">Distributions</h2>
+        <div class="inline border-1 border-l border-gray-300" />
+        <For each={["normal", "exponential"]}>{(d, i) =>
+          <HeaderAnchor onClick={() => setDistribution(d)}>{d}</HeaderAnchor>
+        }</For>
+      </div>
+      <Switch>
+        <Match when={distribution() === "normal"}>
+          <NormalDistributionPage />
+        </Match>
+        <Match when={distribution() === "exponential"}>
+          <ExponentialDistributionPage />
+        </Match>
+      </Switch>
     </>
   );
 };

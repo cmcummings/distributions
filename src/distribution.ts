@@ -14,7 +14,7 @@ function combination(n: number, k: number): number {
 }
 
 const N = 1000;
-function estimateIntegration(f: (x: number) => number, a: number, b: number): number {
+export function estimateIntegral(f: (x: number) => number, a: number, b: number): number {
   let sum = 0;
 
   for (let n = 1; n <= N; n += 1) {
@@ -25,19 +25,57 @@ function estimateIntegration(f: (x: number) => number, a: number, b: number): nu
   return (b - a)/N * sum;
 }
 
-export function binomial(n: number, p: number, x: number): (x: number) => number {
+type PDF = (x: number) => number;
+type CDF = (a: number, b: number) => number;
+
+export function binomial(n: number, p: number): PDF {
   return (x: number) => {
     return combination(n, x) * Math.pow(p, x) * Math.pow(1 - p, n - x); 
   } 
 }
 
 const sqrt2pi = Math.sqrt(2 * Math.PI);
-export function normal(m: number, s: number): (x: number) => number {
+export function normalpdf(m: number, s: number): PDF {
   return (x: number) => {
-    return (1/(s*sqrt2pi)) * Math.pow(Math.E, (-1/2)*Math.pow((x-m)/s, 2))
+    return (1/(s*sqrt2pi)) * Math.pow(Math.E, (-1/2)*Math.pow((x-m)/s, 2));
   }
 }
 
-export function normalcdf(m: number, s: number, a: number, b: number): number {
-  return estimateIntegration(normal(m, s), a, b); 
+export function normalcdf(m: number, s: number): CDF {
+  return (a: number, b: number) => {
+    return estimateIntegral(normalpdf(m, s), a, b); 
+  } 
+}
+
+
+export function poissonpdf(l: number): PDF {
+  return (x: number) => {
+    if (x < 0) return 0; 
+    return Math.pow(Math.E, -l) * Math.pow(l, x) / factorial(x);
+  }
+}
+
+export function poissoncdf(l: number): CDF {
+  return (a: number, b: number) => {
+    return estimateIntegral(poissonpdf(l), a, b);
+  }
+}
+
+
+export function exponentialpdf(l: number): PDF {
+  return (x: number) => {
+    if (x < 0) return 0;
+    return l * Math.pow(Math.E, -l * x);
+  }
+}
+
+function exponentialcdf_lex(l: number, x: number) {
+  if (x < 0) return 0;
+  return 1 - Math.pow(Math.E, -l * x);
+}
+
+export function exponentialcdf(l: number): CDF {
+  return (a: number, b: number) => {
+    return exponentialcdf_lex(l, b) - exponentialcdf_lex(l, a);
+  }
 }

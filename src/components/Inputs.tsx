@@ -272,9 +272,9 @@ const ProbabilityInput: Component<JSX.HTMLAttributes<HTMLDivElement> & Probabili
   return (
     <div {...rest}>
       <span>P(</span>
-      <NumberInput class="w-20 mx-1" step={0.01} value={local.leftBound} onChange={(e) => { local.setLeftBound(parseFloat(e.currentTarget.value)) }} />
-      <span> &lt; X &lt; </span>
-      <NumberInput class="w-20 mx-1" step={0.01} value={local.rightBound} onChange={(e) => { local.setRightBound(parseFloat(e.currentTarget.value)) }} />
+      <NumberInput class="w-20 mx-2" step={0.01} value={local.leftBound} onChange={(e) => { local.setLeftBound(parseFloat(e.currentTarget.value)) }} />
+      <span>  &lt;  X  &lt;  </span>
+      <NumberInput class="w-20 mx-2" step={0.01} value={local.rightBound} onChange={(e) => { local.setRightBound(parseFloat(e.currentTarget.value)) }} />
       <span>) = {local.result.toPrecision(4)}</span>
     </div>
   )
