@@ -3,6 +3,9 @@ import { DividerH } from './components/Generic';
 import Graph, { FunctionType } from "./components/Graph";
 import { RangeDetailed, NumberDetailed, ProbabilityInput } from "./components/Inputs";
 import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf, binomialpdf, binomialcdf } from './distribution';
+import githubIcon from './assets/github-mark.svg'
+import hamburgerIcon from './assets/hamburger.svg'
+
 
 const Container: Component<JSX.HTMLAttributes<HTMLDivElement>> = (p) => {
   const [local, rest] = splitProps(p, ["class"]);
@@ -122,14 +125,6 @@ const UniformDistributionPage: Component = () => {
   const [a, setA] = createSignal(-1);
   const [b, setB] = createSignal(1);
 
-  onMount(() => {
-    console.log("mounted")
-  });
-
-  onCleanup(() => {
-    console.log("unmounted")
-  });
-
   return <DistributionPage
     pdf={uniformpdf(a(), b())}
     cdf={uniformcdf(a(), b())}
@@ -216,7 +211,7 @@ const App: Component = () => {
           <div class="flex justify-between">
             <h2 class="inline">Distributions</h2>
             <div class="sm:hidden">
-              <button onClick={() => setMenuOpen(!menuOpen())}><img src="/src/assets/hamburger.svg" class="w-6 h-6" /></button>
+              <button onClick={() => setMenuOpen(!menuOpen())}><img src={hamburgerIcon} class="w-6 h-6" /></button>
             </div>
           </div>
           <div class={"flex-col sm:flex-row gap-3 " + (menuOpen() ? "flex" : "hidden sm:flex")}>
@@ -230,7 +225,7 @@ const App: Component = () => {
           <div class="sm:invisible">
             <DividerR />
           </div>
-          <a href="https://github.com/cmcummings/distributions" class="flex items-center gap-2">Source<img src="/src/assets/github-mark.svg" class="w-5 h-5 inline" /></a>
+          <a href="https://github.com/cmcummings/distributions" class="flex items-center gap-2">Source<img src={githubIcon} class="w-5 h-5 inline" /></a>
         </div>
       </div>
       {distributions[distribution()].component}
