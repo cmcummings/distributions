@@ -1,5 +1,5 @@
-import { Component, createEffect, createSignal, For, JSX, Match, mergeProps, onCleanup, onMount, Show, splitProps, Switch } from 'solid-js';
-import { DividerH, DividerV } from './components/Generic';
+import { Component, createEffect, createSignal, For, JSX, mergeProps, onCleanup, onMount, splitProps } from 'solid-js';
+import { DividerH } from './components/Generic';
 import Graph, { FunctionType } from "./components/Graph";
 import { RangeDetailed, NumberDetailed, ProbabilityInput } from "./components/Inputs";
 import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf, binomialpdf, binomialcdf } from './distribution';
