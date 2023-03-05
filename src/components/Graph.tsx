@@ -83,9 +83,10 @@ function drawFunction(
       let doneFill = false;
       
       const cy0 = canvasHeight - (-yBegin / ySpread * canvasHeight);
+      let cx = 0; 
       for (let x = xBegin; x <= xEnd; x += options.step) {
         const y = f(x);
-        const cx = (x - xBegin) / xSpread * canvasWidth;
+        cx = (x - xBegin) / xSpread * canvasWidth;
         const cy = canvasHeight - (y - yBegin) / ySpread * canvasHeight;
         
         // Draw curve  
@@ -109,7 +110,8 @@ function drawFunction(
           }
         }
       }
-    
+   
+      fillPath.lineTo(cx, cy0);
       ctx.fill(fillPath);
       ctx.stroke(curvePath); 
    
