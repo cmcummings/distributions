@@ -2,7 +2,7 @@ import { Component, createEffect, createSignal, For, JSX, mergeProps, onCleanup,
 import { DividerH } from './components/Generic';
 import Graph, { FunctionType } from "./components/Graph";
 import { RangeDetailed, NumberDetailed, ProbabilityInput } from "./components/Inputs";
-import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf, binomialpdf, binomialcdf } from './distribution';
+import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf, binomialpdf, binomialcdf, geometricpdf, geometriccdf } from './distribution';
 import githubIcon from './assets/github-mark.svg'
 import hamburgerIcon from './assets/hamburger.svg'
 
@@ -13,6 +13,12 @@ const Container: Component<JSX.HTMLAttributes<HTMLDivElement>> = (p) => {
   return <div class={"p-5 bg-gray-100 border border-gray-200 rounded-md " + local.class} {...rest} />
 }
 
+function getCanvasSize(): [number, number] {
+  let width = Math.min(window.innerWidth - 20, 800);
+  let height = Math.min(window.innerHeight - 20, width * 5/8);
+  return [width, height];
+}
+
 const DistributionPage: Component<{
   pdf: (x: number) => number,
   cdf: (a: number, b: number) => number,
@@ -20,6 +26,20 @@ const DistributionPage: Component<{
   distType: FunctionType
 }> = (p) => {
   const props = mergeProps(p);
+
+  const [canvasSize, setCanvasSize] = createSignal<[number, number]>(getCanvasSize());
+
+  function resizeHandler() {
+    setCanvasSize(getCanvasSize());
+  }
+
+  onMount(() => {
+    window.addEventListener('resize', resizeHandler); 
+  });
+
+  onCleanup(() => {
+    window.removeEventListener('resize', resizeHandler);
+  });
 
   const [domainMin, setDomainMin] = createSignal(-5);
   const [domainMax, setDomainMax] = createSignal(5);
@@ -37,14 +57,14 @@ const DistributionPage: Component<{
   return (
     <main class="px-2 lg:px-[10%] mt-5 flex flex-wrap gap-5 items-start justify-center">
       <Container>
-        <Graph width={500} height={300}
+        <Graph width={canvasSize()[0]} height={canvasSize()[1]}
           domain={[domainMin(), domainMax()]}
           range={[rangeMin(), rangeMax()]}
           probBounds={[probLeftBound(), probRightBound()]}
           func={props.pdf}
           funcType={props.distType} />
       </Container>
-      <Container>
+      <Container class="flex-grow self-stretch">
         <h3 class="text-lg block font-medium">Graph Settings</h3>
         <RangeDetailed
           name="Domain"
@@ -68,7 +88,7 @@ const DistributionPage: Component<{
           rightBound={probRightBound()} setRightBound={setProbRightBound}
           result={probResult()} />
       </Container>
-      <Container class="flex-shrink">
+      <Container>
         <h3 class="text-lg font-medium">How to use</h3>
         <ul>
           <li>- Select a distribution to model from the top-bar.</li>
@@ -173,6 +193,21 @@ const PoissonDistributionPage: Component = () => {
     </>} />
 }
 
+const GeometricDistributionPage: Component = () => {
+  const [p, setP] = createSignal(0.5);
+  
+  return <DistributionPage
+    pdf={geometricpdf(p())}
+    cdf={geometriccdf(p())}
+    distType={FunctionType.Discrete}
+    distributionSettingsChildren={<>
+      <NumberDetailed
+        name="Probability of success (p)"
+        value={p()} setValue={setP}
+        min={0} max={1} step={0.01} />
+    </>} />
+}
+
 const distributions: { name: string, component: Component }[] = [
   {
     name: "Normal",
@@ -193,6 +228,10 @@ const distributions: { name: string, component: Component }[] = [
   {
     name: "Poisson",
     component: PoissonDistributionPage
+  },
+  {
+    name: "Geometric",
+    component: GeometricDistributionPage
   }
 ]
 

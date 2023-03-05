@@ -111,3 +111,22 @@ export function uniformcdf(a: number, b: number): CDF {
     return (d - c) / (b - a);
   }
 }
+
+
+export function geometricpdf(p: number): PDF {
+  return (k: number) => {
+    if (k < 0) return 0;
+    return Math.pow(1-p, k-1) * p;
+  }
+}
+
+function geometriccdf_lex(p: number, k: number) {
+  if (k < 0) return 0;
+  return 1 - Math.pow(1-p, k); 
+}
+
+export function geometriccdf(p: number): CDF {
+  return (a: number, b: number) => {
+    return geometriccdf_lex(p, b) - geometriccdf_lex(p, a);
+  }
+}
