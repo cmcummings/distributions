@@ -2,11 +2,18 @@ import { Accessor, Component, createEffect, mergeProps } from "solid-js";
 
 export enum FunctionType { Discrete, Continuous }
 
+
+
+const GRID_COLOR = "#888888";
+const STROKE = "#14b8a6";
+const FILL = "#14b8a6";
+const FILL_TRANSPARENT = "#14b8a644";
+
 /**
  * Draws a light grey line from (x1, y1) to (x2, y2) 
  */
 function drawGridLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
-  ctx.strokeStyle = "#888888";
+  ctx.strokeStyle = GRID_COLOR; 
   ctx.lineWidth = 0.4;
   ctx.beginPath();
   ctx.moveTo(x1, y1);
@@ -14,10 +21,6 @@ function drawGridLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2:
   ctx.stroke();
   ctx.closePath();
 }
-
-const STROKE = "#14b8a6";
-const FILL = "#14b8a6";
-const FILL_TRANSPARENT = "#14b8a644";
 
 /**
  * Draws a grid and the function f to the canvas. 
@@ -46,18 +49,8 @@ function drawFunction(
   const ySpread = yEnd - yBegin;
 
   // Draw grid
-
-  // Draw y-axis if visible
-  if (xBegin <= 0 && xEnd >= 0) {
-    const cx = -xBegin / xSpread * canvasWidth;
-    drawGridLine(ctx, cx, 0, cx, canvasHeight);
-  }
-
-  // Draw x-axis if visible
-  if (yBegin <= 0 && yEnd >= 0) {
-    const cy = canvasHeight - (-yBegin / ySpread * canvasHeight);
-    drawGridLine(ctx, 0, cy, canvasWidth, cy);
-  } 
+  const cx0 = -xBegin / xSpread * canvasWidth;
+  const cy0 = canvasHeight - (-yBegin / ySpread * canvasHeight); 
  
   // Draw function
   switch (funcType) {
@@ -118,9 +111,45 @@ function drawFunction(
       }
     
       ctx.fill(fillPath);
-      ctx.stroke(curvePath);
+      ctx.stroke(curvePath); 
    
       break;
+  }
+
+  // Draw y-axis if visible
+  if (xBegin <= 0 && xEnd >= 0) {
+    drawGridLine(ctx, cx0, 0, cx0, canvasHeight); 
+
+    // Draw y-axis incremental lines
+    const yi = canvasHeight / 10;
+    let cy = 0 + (cy0 % yi);
+    ctx.fillStyle = GRID_COLOR;
+    while (cy < canvasHeight) {
+      if (cy !== cy0) {
+        drawGridLine(ctx, cx0 - 4, cy, cx0 + 4, cy);
+        const y = cy/canvasHeight * ySpread - yEnd; 
+        ctx.fillText(y.toPrecision(2), cx0 + 6, cy + 2);
+      }
+      cy += yi;
+    }
+  }
+
+  // Draw x-axis if visible
+  if (yBegin <= 0 && yEnd >= 0) {
+    drawGridLine(ctx, 0, cy0, canvasWidth, cy0);
+
+    // Draw x-axis incremental lines
+    const xi = canvasWidth / 10;
+    let cx = 0 + (cx0 % xi);
+    ctx.fillStyle = GRID_COLOR;
+    while (cx < canvasWidth) {
+      if (cx !== cx0) {
+        drawGridLine(ctx, cx, cy0 - 4, cx, cy0 + 4);
+        const x = cx/canvasWidth * xSpread + xBegin;
+        ctx.fillText(x.toPrecision(2), cx - 3, cy0 - 2); 
+      }
+      cx += xi;
+    }
   }
 }
 

@@ -225,7 +225,7 @@ const App: Component = () => {
           <div class="sm:invisible">
             <DividerR />
           </div>
-          <a href="https://github.com/cmcummings/distributions" class="flex items-center gap-2">Source<img src={githubIcon} class="w-5 h-5 inline" /></a>
+          <a href="https://github.com/cmcummings/distributions" class="flex items-center gap-2 hover:underline">Source<img src={githubIcon} class="w-5 h-5 inline" /></a>
         </div>
       </div>
       {distributions[distribution()].component}
