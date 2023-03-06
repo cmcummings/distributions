@@ -127,6 +127,30 @@ function geometriccdf_lex(p: number, k: number) {
 
 export function geometriccdf(p: number): CDF {
   return (a: number, b: number) => {
-    return geometriccdf_lex(p, b) - geometriccdf_lex(p, a);
+    return geometriccdf_lex(p, Math.floor(b)) - geometriccdf_lex(p, Math.ceil(a));
   }
+}
+
+
+export function nbinomialpdf(k: number, p: number): PDF {
+  return (x: number) => {
+    if (x < 0) return 0;
+    return combination(x-1, k-1) * Math.pow(p, k) * Math.pow(1-p, x-k);
+  }
+}
+
+export function nbinomialcdf(k: number, p: number): CDF {
+  return discreteCDF(nbinomialpdf(k, p)); 
+}
+
+
+export function hypergeometricpdf(N: number, n: number, k: number): PDF {
+  return (x: number) => {
+    if (x < 0) return 0;
+    return combination(k, x) * combination(N-k, n-x) / combination(N, n);
+  }
+}
+
+export function hypergeometriccdf(N: number, n: number, k: number): CDF {
+  return discreteCDF(hypergeometricpdf(N, n, k));
 }

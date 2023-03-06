@@ -2,7 +2,7 @@ import { Component, createEffect, createSignal, For, JSX, mergeProps, onCleanup,
 import { DividerH } from './components/Generic';
 import Graph, { FunctionType } from "./components/Graph";
 import { RangeDetailed, NumberDetailed, ProbabilityInput } from "./components/Inputs";
-import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf, binomialpdf, binomialcdf, geometricpdf, geometriccdf } from './distribution';
+import { normalcdf, normalpdf, poissonpdf, poissoncdf, exponentialpdf, exponentialcdf, uniformpdf, uniformcdf, binomialpdf, binomialcdf, geometricpdf, geometriccdf, nbinomialpdf, nbinomialcdf, hypergeometricpdf, hypergeometriccdf } from './distribution';
 import githubIcon from './assets/github-mark.svg'
 import hamburgerIcon from './assets/hamburger.svg'
 
@@ -208,6 +208,51 @@ const GeometricDistributionPage: Component = () => {
     </>} />
 }
 
+const NBinomialDistributionPage: Component = () => {
+  const [k, setK] = createSignal(2);
+  const [p, setP] = createSignal(0.5);
+
+  return <DistributionPage
+    pdf={nbinomialpdf(k(), p())}
+    cdf={nbinomialcdf(k(), p())}
+    distType={FunctionType.Discrete}
+    distributionSettingsChildren={<>
+      <NumberDetailed
+        name="Number of trials (k)"
+        value={k()} setValue={setK}
+        min={0} max={20} step={1} />
+      <NumberDetailed
+        name="Probability of success (p)"
+        value={p()} setValue={setP}
+        min={0} max={1} step={0.01} />
+    </>} />
+}
+
+const HypergeometricDistributionPage: Component = () => {
+  const [cn, setCN] = createSignal(2);
+  const [n, setN] = createSignal(1);
+  const [k, setK] = createSignal(1);
+
+  return <DistributionPage
+    pdf={hypergeometricpdf(cn(), n(), k())}
+    cdf={hypergeometriccdf(cn(), n(), k())}
+    distType={FunctionType.Discrete}
+    distributionSettingsChildren={<>
+      <NumberDetailed
+        name="Population size (N)"
+        value={cn()} setValue={setCN}
+        min={0} max={20} step={1} />
+      <NumberDetailed
+        name="Number of draws (n)"
+        value={n()} setValue={setN}
+        min={0} max={20} step={1} />
+      <NumberDetailed
+        name="Number of successes in population (k)"
+        value={k()} setValue={setK}
+        min={0} max={20} step={1} />
+    </>} />
+}
+
 const distributions: { name: string, component: Component }[] = [
   {
     name: "Normal",
@@ -226,12 +271,20 @@ const distributions: { name: string, component: Component }[] = [
     component: BinomialDistributionPage
   },
   {
+    name: "Neg.Binomial",
+    component: NBinomialDistributionPage
+  },
+  {
     name: "Poisson",
     component: PoissonDistributionPage
   },
   {
     name: "Geometric",
     component: GeometricDistributionPage
+  },
+  {
+    name: "Hypergeometric",
+    component: HypergeometricDistributionPage
   }
 ]
 
@@ -245,7 +298,7 @@ const App: Component = () => {
 
   return (
     <>
-      <div class="bg-gray-100 border border-gray-200 px-2 py-2 xl:px-[10%] 2xl:px-[15%] flex flex-col sticky z-10 top-0 sm:flex-row sm:justify-between gap-3 align-center">
+      <div class="bg-gray-100 border border-gray-200 px-2 py-2 xl:px-[10%] 2xl:px-[15%] flex flex-col sticky z-10 top-0 sm:flex-row sm:justify-between gap-3 align-center overflow-hidden">
         <div class="flex flex-col sm:flex-row gap-3">
           <div class="flex justify-between">
             <h2 class="inline">Distributions</h2>
